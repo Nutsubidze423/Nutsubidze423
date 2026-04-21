@@ -21,11 +21,10 @@
 
 ---
 
-## GitHub Stats
+## Stats
 
 <div align="center">
-  <img height="160" src="https://github-readme-stats.vercel.app/api?username=Nutsubidze423&show_icons=true&theme=github_dark&hide_border=true&bg_color=0d1117&title_color=58a6ff&icon_color=58a6ff&text_color=7d8590" />
-  <img height="160" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Nutsubidze423&layout=compact&theme=github_dark&hide_border=true&bg_color=0d1117&title_color=58a6ff&text_color=7d8590" />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Nutsubidze423&layout=compact&theme=github_dark&hide_border=true&bg_color=0d1117&title_color=58a6ff&text_color=7d8590" />
 </div>
 
 <div align="center">
