@@ -24,11 +24,11 @@
 ## Stats
 
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Nutsubidze423&layout=compact&theme=github_dark&hide_border=true&bg_color=0d1117&title_color=58a6ff&text_color=7d8590" />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Nutsubidze423&layout=compact&theme=github_dark&hide_border=true&bg_color=0d1117&title_color=58a6ff&text_color=7d8590&v=2" />
 </div>
 
 <div align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com?user=Nutsubidze423&theme=github-dark-blue&hide_border=true&background=0d1117&stroke=1f6feb&ring=58a6ff&fire=f78510&currStreakLabel=58a6ff" />
+  <img src="https://github-readme-streak-stats.herokuapp.com?user=Nutsubidze423&theme=github-dark-blue&hide_border=true&background=0d1117&stroke=1f6feb&ring=58a6ff&fire=f78510&currStreakLabel=58a6ff&v=2" />
 </div>
 
 ---
