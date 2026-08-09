@@ -39,6 +39,18 @@
 |---------|-------------|-------|
 | [DOS](https://github.com/Nutsubidze423/DOS) | Browser-based retro OS simulator with pixel-perfect terminal UI and keyboard navigation | TypeScript, CSS, Canvas |
 | [EkkoShop](https://github.com/Nutsubidze423/EkkoShop) | Full-featured tech e-commerce with product catalog and cart management | TypeScript, Next.js, Tailwind |
+| [RedSeem-Clothing](https://github.com/Nutsubidze423/RedSeem-Clothing) | Modern fashion e-commerce storefront | Next.js, TypeScript, Tailwind |
+| [Space-Tourism](https://github.com/Nutsubidze423/Space-Tourism) | 3D space tourism experience with interactive WebGL rendering | TypeScript, Three.js |
+| [Spectre](https://github.com/Nutsubidze423/Spectre) | Collaborative whiteboard canvas app | JavaScript, Canvas |
+| [Liven](https://github.com/Nutsubidze423/Liven) | Browser-based SVG editor | JavaScript, SVG |
+| [lifeos-dashboard](https://github.com/Nutsubidze423/lifeos-dashboard) | Personal productivity dashboard with habit tracking and contribution graph | Next.js, React, Tailwind |
+| [taskflow-cli](https://github.com/Nutsubidze423/taskflow-cli) | Task manager with priority, tags, and persistence | Next.js, React |
+| [snapgrid-gallery](https://github.com/Nutsubidze423/snapgrid-gallery) | Drag-and-drop image gallery with masonry layout and lightbox | JavaScript, HTML, CSS |
+| [cointrack-crypto](https://github.com/Nutsubidze423/cointrack-crypto) | Crypto tracker with CoinGecko API and Recharts | Next.js, React, Recharts |
+| [devbot-discord](https://github.com/Nutsubidze423/devbot-discord) | Discord bot management dashboard | Next.js, React |
+| [fitlog-workout](https://github.com/Nutsubidze423/fitlog-workout) | PWA workout tracker with timer and progress charts | Next.js, React, Tailwind |
+| [codesnip-manager](https://github.com/Nutsubidze423/codesnip-manager) | Code snippet manager with syntax highlighting and search | Next.js, React, PrismJS |
+| [typerush-game](https://github.com/Nutsubidze423/typerush-game) | Typing speed test game with WPM and leaderboard | JavaScript, HTML, CSS |
 
 ---
 
