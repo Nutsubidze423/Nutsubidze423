@@ -28,7 +28,7 @@
 </div>
 
 <div align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com?user=Nutsubidze423&theme=github-dark-blue&hide_border=true&background=0d1117&stroke=1f6feb&ring=58a6ff&fire=f78510&currStreakLabel=58a6ff&v=2" />
+  <img src="https://streak-stats.demolab.com?user=Nutsubidze423&theme=github-dark-blue&hide_border=true&background=0d1117&stroke=1f6feb&ring=58a6ff&fire=f78510&currStreakLabel=58a6ff&include_all_commits=true&v=3" />
 </div>
 
 ---
