@@ -10,13 +10,13 @@ const placeholder: RenderProps = {
   script: {
     ideaId: 'placeholder',
     hook: { text: 'Open the studio to preview a real build', speakerId: null },
-    beats: [{ text: 'Run npm run build:one first', speakerId: null, visualCue: '', onScreen: null }],
+    beats: [{ text: 'Run npm run build:one first', speakerId: null, backgroundId: 'void', pose: 'neutral', onScreen: null }],
     payoff: '',
     titleCandidates: ['', '', '', '', ''],
     estimatedSeconds: 0,
   },
   audio: { voicePath: '', durationMs: 3000, words: [], beatFrames: [90], hookFrames: 30 },
-  visuals: { images: [] },
+  visuals: { frames: [] },
 };
 
 export const RemotionRoot: React.FC = () => (

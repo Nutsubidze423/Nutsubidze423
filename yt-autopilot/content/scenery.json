@@ -1,0 +1,12 @@
+[
+  { "id": "lift",        "prompt": "the interior of a small mirrored office lift, brushed steel walls, one flickering ceiling panel, no people" },
+  { "id": "kitchen",     "prompt": "a cramped 1970s kitchen with patterned lino, floral wallpaper and a single hanging bulb, no people" },
+  { "id": "boardroom",   "prompt": "an empty corporate boardroom, long lacquered table, vertical blinds, grey carpet tiles, no people" },
+  { "id": "carpark",     "prompt": "an underground car park at night lit by orange sodium lamps, wet concrete floor, no people" },
+  { "id": "corridor",    "prompt": "a very long beige office corridor with identical doors receding into the distance, no people" },
+  { "id": "beach",       "prompt": "an overcast pebble beach with grey sea and a single rusted groyne, no people" },
+  { "id": "supermarket", "prompt": "a supermarket aisle under harsh fluorescent light, shelves of unbranded tins, no people" },
+  { "id": "waitingroom", "prompt": "a municipal waiting room with bolted plastic chairs and a ticket display, no people" },
+  { "id": "rooftop",     "prompt": "a flat gravel rooftop with air conditioning units and a low parapet, dusk sky, no people" },
+  { "id": "void",        "prompt": "an empty infinite studio backdrop in flat saturated cyan, no horizon, no people" }
+]

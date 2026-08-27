@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Agent-operated production pipeline for a faceless YouTube Shorts channel",
   "scripts": {
+    "library": "tsx --env-file-if-exists=.env src/cli.ts library",
     "doctor": "tsx --env-file-if-exists=.env src/cli.ts doctor",
     "ideate": "tsx --env-file-if-exists=.env src/cli.ts ideate",
     "script": "tsx --env-file-if-exists=.env src/cli.ts script",

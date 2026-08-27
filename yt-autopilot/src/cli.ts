@@ -5,7 +5,8 @@ import { generateScript } from './script/generate.ts';
 import { generateIdeas } from './ideate/generate.ts';
 import { synthesize } from './voice/tts.ts';
 import { buildAudioManifest } from './voice/align.ts';
-import { generateVisuals } from './visual/images.ts';
+import { resolveVisuals } from './visual/resolve.ts';
+import { buildLibrary, libraryStatus } from './visual/library.ts';
 import { buildMetadata } from './packaging/metadata.ts';
 import { upload } from './publish/youtube.ts';
 import type { RenderProps, Idea } from './types.ts';
@@ -43,9 +44,8 @@ async function build(idea: Idea): Promise<string> {
     );
   }
 
-  console.log('  visuals…');
-  const visuals = await generateVisuals(script, idea.castIds, dir);
-  console.log(`  visuals ok — ${visuals.images.length} frames`);
+  const visuals = resolveVisuals(script);
+  console.log(`  visuals ok — ${visuals.frames.length} frames from the library, $0.00`);
 
   const props: RenderProps = { script, audio, visuals };
   writeFileSync(join(dir, 'props.json'), JSON.stringify(props, null, 2));
@@ -58,6 +58,11 @@ async function main() {
   const [cmd, arg] = process.argv.slice(2);
 
   switch (cmd) {
+    case 'library': {
+      await buildLibrary({ dryRun: arg === '--dry' });
+      break;
+    }
+
     case 'doctor': {
       process.exit(printDoctor() ? 0 : 1);
       break;
@@ -117,6 +122,7 @@ async function main() {
       console.log(`
 yt-autopilot
 
+  npm run library [--dry]      build the sprite + background library (one-time)
   npm run doctor               preflight: keys, cast, bible, spend
   npm run ideate [n]           generate n premises → state/ideas.json
   npm run build:one [ideaId]   script → voice → visuals → props.json

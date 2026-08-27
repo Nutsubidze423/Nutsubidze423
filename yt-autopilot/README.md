@@ -23,7 +23,8 @@ ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  �
 | Script | `src/script/` | Two-pass: writer, then a critic that can reject and force a rewrite |
 | Voice | `src/voice/tts.ts` | Per-line WAV, one locked voice per character |
 | Timing | `src/voice/align.ts` | Sample-accurate concat + word timings, pure Node, **verified** |
-| Visuals | `src/visual/images.ts` | Content-hash cached, character `look` spliced verbatim |
+| Library | `src/visual/library.ts` | Sprites + backgrounds, built once (~$2), reused forever |
+| Visuals | `src/visual/resolve.ts` | Pure lookup — no image API call during a build |
 | Assembly | `remotion/` | 1080×1920, karaoke captions, push-in motion, progress bar |
 | Packaging | `src/packaging/metadata.ts` | Title selection, learns from `metrics.json` once it has rows |
 | Publish | `src/publish/youtube.ts` | `DRY_RUN=true` by default |
@@ -73,7 +74,10 @@ script prompt, and the pipeline has no taste of its own.
 ## Running one video
 
 ```bash
-npm run doctor                       # preflight — do this first
+npm run library --dry                # see what the library costs before buying
+npm run library                      # build it — one time, ~$2
+npm run doctor                       # preflight — everything green?
+
 npm run ideate 20                    # premises → state/ideas.json
 # move the ones you want into state/queue.json
 
@@ -91,15 +95,30 @@ before you've written anything.
 
 ### What it costs
 
-Every LLM call bills real token usage into `state/costs.json`; TTS bills by
-character and images bill only on cache miss. `build:one` prints the per-video
-and month-to-date figure when it finishes. Expect roughly **$0.60–0.90 per
-Short** — most of it images.
+| | |
+|---|---|
+| Asset library | **~$2.00, once** (25 assets) |
+| Per Short | **~$0.05–0.10** |
+| 5 Shorts/week | **~$2/month** |
 
-Spending halts at `MONTHLY_COST_CEILING_USD` (default $120) rather than
-overrunning quietly. The price table at the top of `src/cost.ts` is
-hand-maintained — an out-of-date table makes the ceiling wrong in the dangerous
-direction, so check it against your billing after the first week.
+Generating a fresh image per beat would cost about $0.50 a video *and* give you
+a character who looks subtly different every time, because the model re-rolls
+the design on every call. Building a fixed library once and compositing from it
+is cheaper and better: the cast is pixel-identical across the whole catalogue,
+builds make no image API call at all, and sprites can be animated — which a
+freshly generated still never can.
+
+What is left is tokens and speech, and both are small. The system block (bible
++ cast) is cached, so the draft/critique/redraft cycle re-reads it at ~0.1×
+input price instead of paying full freight three times.
+
+Every LLM call bills real token usage into `state/costs.json`; `build:one`
+prints the per-video and month-to-date figure. Spending halts at
+`MONTHLY_COST_CEILING_USD` (default $120) rather than overrunning quietly.
+
+The price table at the top of `src/cost.ts` is hand-maintained — an
+out-of-date table makes the ceiling wrong in the dangerous direction, so check
+it against your billing after the first week.
 
 ## Getting the YouTube refresh token
 
@@ -132,7 +151,13 @@ login. It is the single point of failure for the whole operation.
   `whisper-timestamped` later; the `WordTiming[]` contract won't change.
 - **The 60s ceiling is enforced twice** — once on the word-count estimate, once
   on real audio duration. The second one is the one that matters.
-- **Don't change `STYLE` in `src/visual/images.ts` mid-catalogue.** Old and new
-  videos will read as two different channels.
+- **Don't change `STYLE` in `src/visual/library.ts` mid-catalogue**, and don't
+  delete library assets. Regenerating a sprite gives you a *different*
+  character, and the back catalogue will visibly split into a before and after.
+  Adding new poses or backgrounds is free and safe; replacing existing ones is
+  not.
+- **The writer can only pick ids that exist.** Backgrounds come from
+  `content/scenery.json` and poses from each character's `poses`. Add to either
+  and re-run `npm run library` — it only generates what is missing.
 - **`.env` is loaded via Node's `--env-file-if-exists`**, wired into the npm
   scripts. Running `tsx src/cli.ts` directly will not pick it up.

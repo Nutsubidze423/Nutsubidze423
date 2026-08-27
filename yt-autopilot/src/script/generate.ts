@@ -2,6 +2,7 @@ import { Script, type Idea, type Character } from '../types.ts';
 import { askJson, askText } from '../llm.ts';
 import { WRITER_SYSTEM, CRITIC_SYSTEM } from './prompts.ts';
 import { state } from '../state.ts';
+import { scenery } from '../visual/library.ts';
 import { MAX_DURATION_SEC } from '../config.ts';
 
 /** Spoken-word estimate. Deliberately conservative: overrunning 60s gets the
@@ -16,7 +17,7 @@ export function estimateSeconds(s: Pick<Script, 'hook' | 'beats' | 'payoff'>): n
   return words / WORDS_PER_SEC;
 }
 
-async function draft(idea: Idea, cast: Character[], bible: string, notes?: string[]): Promise<Script> {
+async function draft(idea: Idea, cast: Character[], bible: string, backgrounds: string[], notes?: string[]): Promise<Script> {
   const prompt = `
 Write the Short for this premise.
 
@@ -29,7 +30,7 @@ Return ONLY a JSON object:
 {
   "ideaId": ${JSON.stringify(idea.id)},
   "hook": {"text": "...", "speakerId": "<cast id or null>"},
-  "beats": [{"text":"...","speakerId":"<cast id or null>","visualCue":"...","onScreen":"WORD or null"}],
+  "beats": [{"text":"...","speakerId":"<cast id>","backgroundId":"<id from the list>","pose":"<pose id>","onScreen":"WORD or null"}],
   "payoff": "...",
   "titleCandidates": ["...","...","...","...","..."],
   "estimatedSeconds": 0
@@ -41,7 +42,7 @@ the promise mismatch that kills watch-through.
 `.trim();
 
   return askJson({
-    system: WRITER_SYSTEM(bible, cast),
+    system: WRITER_SYSTEM(bible, cast, backgrounds),
     prompt,
     maxTokens: 3000,
     stage: 'script',
@@ -57,8 +58,9 @@ the promise mismatch that kills watch-through.
 export async function generateScript(idea: Idea): Promise<Script> {
   const cast = state.cast.all();
   const bible = state.bible();
+  const backgrounds = scenery().map(s => s.id);
 
-  let script = await draft(idea, cast, bible);
+  let script = await draft(idea, cast, bible, backgrounds);
 
   for (let round = 0; round < 2; round++) {
     const critique = await askText(
@@ -77,7 +79,7 @@ export async function generateScript(idea: Idea): Promise<Script> {
     }
 
     if (verdict.verdict === 'pass') break;
-    script = await draft(idea, cast, bible, verdict.notes);
+    script = await draft(idea, cast, bible, backgrounds, verdict.notes);
   }
 
   if (script.estimatedSeconds > MAX_DURATION_SEC) {

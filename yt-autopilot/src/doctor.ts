@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { state } from './state.ts';
 import { monthToDate } from './cost.ts';
+import { libraryStatus } from './visual/library.ts';
 import { config } from './config.ts';
 
 type Check = { ok: boolean; label: string; detail?: string; fatal: boolean };
@@ -59,6 +60,20 @@ export function doctor(): Check[] {
     fatal: false,
     detail: queue.length ? `${queue.length} idea(s) queued` : 'empty — run: npm run ideate',
   });
+
+  try {
+    const lib = libraryStatus();
+    checks.push({
+      ok: lib.missing.length === 0,
+      label: 'asset library',
+      fatal: true,
+      detail: lib.missing.length === 0
+        ? `${lib.total} assets present`
+        : `${lib.present}/${lib.total} present — missing ${lib.missing.slice(0, 4).join(', ')}${lib.missing.length > 4 ? '…' : ''}. Run: npm run library`,
+    });
+  } catch (err) {
+    checks.push({ ok: false, label: 'asset library', fatal: true, detail: String(err instanceof Error ? err.message : err) });
+  }
 
   const spent = monthToDate();
   const ceiling = config.costCeilingUsd();

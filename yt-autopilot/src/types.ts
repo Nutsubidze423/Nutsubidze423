@@ -11,6 +11,9 @@ export const Character = z.object({
   /** Seed pinned per character for cross-generation consistency. */
   seed: z.number().int(),
   voice: z.string(),
+  /** Pose sprites generated once per character and reused forever. Ids here
+   *  are what the writer picks from, so keep them few and descriptive. */
+  poses: z.array(z.string()).min(1),
   /** One line of who they are. Drives writing, not rendering. */
   personality: z.string(),
   catchphrase: z.string().optional(),
@@ -36,8 +39,11 @@ export const Beat = z.object({
   /** Spoken line. Keep under ~18 words — this is Shorts pacing. */
   text: z.string(),
   speakerId: z.string().nullable(),
-  /** Drives image generation in src/visual. */
-  visualCue: z.string(),
+  /** Id from content/scenery.json. Chosen, not generated — the library is
+   *  built once and every video composites from it at zero marginal cost. */
+  backgroundId: z.string(),
+  /** Pose id from the speaking character's `poses`. */
+  pose: z.string(),
   /** Big centered word burned over the frame at this beat, if any. */
   onScreen: z.string().nullable(),
 });
@@ -72,9 +78,14 @@ export const AudioManifest = z.object({
 });
 export type AudioManifest = z.infer<typeof AudioManifest>;
 
+/** Resolved asset paths per beat. Composited at render time rather than
+ *  generated per video — see src/visual/library.ts. */
 export const VisualManifest = z.object({
-  /** One image per beat, plus index 0 for the hook. Content-hash cached. */
-  images: z.array(z.object({ beatIndex: z.number(), path: z.string(), cacheKey: z.string() })),
+  frames: z.array(z.object({
+    beatIndex: z.number(),
+    backgroundPath: z.string(),
+    spritePath: z.string().nullable(),
+  })),
 });
 export type VisualManifest = z.infer<typeof VisualManifest>;
 

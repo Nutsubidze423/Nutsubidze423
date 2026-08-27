@@ -8,6 +8,8 @@ function get(): Anthropic {
   return client;
 }
 
+/** Sonnet 5 ($2/$10 per Mtok). The writer is the product — this is not the
+ *  place to save two cents. Images dominate the bill, not tokens. */
 export const MODEL = 'claude-sonnet-5';
 
 /** Ask for JSON and parse it. Retries once on malformed output, feeding the
@@ -26,10 +28,20 @@ export async function askJson<T>(opts: {
     const res = await get().messages.create({
       model: MODEL,
       max_tokens: opts.maxTokens ?? 4096,
-      system: opts.system,
+      // Explicit breakpoint at the end of the shared prefix. The system block
+      // (bible + cast) is byte-identical across every call in a build; the
+      // user prompt after it is not. An automatic breakpoint would land after
+      // the varying tail and pay the write premium on bytes never read back.
+      system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
       messages,
     });
-    recordLlm(opts.stage, res.usage.input_tokens, res.usage.output_tokens);
+    recordLlm(
+      opts.stage,
+      res.usage.input_tokens,
+      res.usage.output_tokens,
+      res.usage.cache_read_input_tokens ?? 0,
+      res.usage.cache_creation_input_tokens ?? 0,
+    );
 
     const text = res.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')
@@ -59,10 +71,16 @@ export async function askText(
   const res = await get().messages.create({
     model: MODEL,
     max_tokens: maxTokens,
-    system,
+    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: prompt }],
   });
-  recordLlm(stage, res.usage.input_tokens, res.usage.output_tokens);
+  recordLlm(
+    stage,
+    res.usage.input_tokens,
+    res.usage.output_tokens,
+    res.usage.cache_read_input_tokens ?? 0,
+    res.usage.cache_creation_input_tokens ?? 0,
+  );
   return res.content
     .filter((b): b is Anthropic.TextBlock => b.type === 'text')
     .map(b => b.text)

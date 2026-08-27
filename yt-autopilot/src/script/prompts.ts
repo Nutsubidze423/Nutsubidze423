@@ -3,11 +3,14 @@ import type { Character } from '../types.ts';
 export function castBlock(cast: Character[]): string {
   if (cast.length === 0) return '(no cast defined yet)';
   return cast
-    .map(c => `- ${c.name} (id: ${c.id}) — ${c.personality}${c.catchphrase ? ` Catchphrase: "${c.catchphrase}"` : ''}`)
+    .map(c =>
+      `- ${c.name} (id: ${c.id}) — ${c.personality}` +
+      `${c.catchphrase ? ` Catchphrase: "${c.catchphrase}"` : ''}` +
+      `\n  poses: ${c.poses.join(', ')}`)
     .join('\n');
 }
 
-export const WRITER_SYSTEM = (bible: string, cast: Character[]) => `
+export const WRITER_SYSTEM = (bible: string, cast: Character[], backgrounds: string[]) => `
 You write scripts for a faceless YouTube Shorts channel. Absurdist meme comedy
 with a recurring cast — a show with continuity, not disconnected clips.
 
@@ -25,8 +28,13 @@ FORMAT RULES — these are hard constraints, not preferences:
 - 3 to 6 beats. Each beat is one spoken line, under 18 words. No slow burn.
 - The payoff line must loop back to the hook, so a rewatch feels intentional.
   Rewatches are the cheapest retention on Shorts.
-- Every beat needs a visualCue: a concrete, literal image description. Say what
-  is physically in frame. Never describe a mood or an abstraction.
+- Every beat picks a backgroundId from this list, and nothing else:
+  ${backgrounds.join(', ')}
+- Every beat picks a pose from the speaking character's pose list above.
+  Pick the pose that matches what the line is doing, not the same one twice
+  in a row.
+- Keep consecutive beats in the same backgroundId unless the joke needs a cut.
+  Location changes are punctuation — spend them.
 - onScreen is a single word or very short phrase burned large over the frame at
   that beat, or null. Use it for the punch word, not for every line.
 

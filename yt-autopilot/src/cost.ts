@@ -16,9 +16,12 @@ const PATH = join(process.cwd(), 'state', 'costs.json');
  *  out-of-date table makes the ceiling silently wrong in the dangerous
  *  direction. Last checked: 2026-08. */
 export const PRICES = {
-  /** Claude Sonnet, USD per million tokens. */
-  llmInputPerM: 3,
-  llmOutputPerM: 15,
+  /** Claude Sonnet 5, USD per million tokens. */
+  llmInputPerM: 2,
+  llmOutputPerM: 10,
+  /** Cache reads bill at ~0.1x input; writes at 1.25x on the 5-minute TTL. */
+  llmCacheReadPerM: 0.2,
+  llmCacheWritePerM: 2.5,
   /** OpenAI tts-1-hd, USD per million characters. */
   ttsPerMChars: 30,
   /** gpt-image-1, USD per generated image at 1024x1536. Varies with quality —
@@ -45,11 +48,22 @@ export function record(stage: CostEntry['stage'], usd: number, detail: string): 
   writeFileSync(PATH, JSON.stringify(all, null, 2) + '\n');
 }
 
-export const recordLlm = (stage: CostEntry['stage'], inTok: number, outTok: number) =>
+export const recordLlm = (
+  stage: CostEntry['stage'],
+  inTok: number,
+  outTok: number,
+  cacheReadTok = 0,
+  cacheWriteTok = 0,
+) =>
   record(
     stage,
-    (inTok / 1e6) * PRICES.llmInputPerM + (outTok / 1e6) * PRICES.llmOutputPerM,
-    `${inTok} in / ${outTok} out`,
+    (inTok / 1e6) * PRICES.llmInputPerM +
+      (outTok / 1e6) * PRICES.llmOutputPerM +
+      (cacheReadTok / 1e6) * PRICES.llmCacheReadPerM +
+      (cacheWriteTok / 1e6) * PRICES.llmCacheWritePerM,
+    `${inTok} in / ${outTok} out` +
+      (cacheReadTok ? ` / ${cacheReadTok} cached` : '') +
+      (cacheWriteTok ? ` / ${cacheWriteTok} written` : ''),
   );
 
 export const recordTts = (chars: number) =>

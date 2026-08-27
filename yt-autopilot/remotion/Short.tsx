@@ -6,8 +6,7 @@ import { Captions } from './components/Captions.tsx';
 import { Progress } from './components/Progress.tsx';
 
 export const Short: React.FC<RenderProps> = ({ script, audio, visuals }) => {
-  const imageFor = (beatIndex: number) =>
-    visuals.images.find(i => i.beatIndex === beatIndex)?.path ?? '';
+  const frameFor = (beatIndex: number) => visuals.frames.find(f => f.beatIndex === beatIndex);
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
@@ -15,13 +14,19 @@ export const Short: React.FC<RenderProps> = ({ script, audio, visuals }) => {
 
       <Series>
         <Series.Sequence durationInFrames={audio.hookFrames}>
-          <Scene src={imageFor(0)} durationInFrames={audio.hookFrames} onScreen={null} />
+          <Scene
+            backgroundPath={frameFor(0)?.backgroundPath ?? ''}
+            spritePath={frameFor(0)?.spritePath ?? null}
+            durationInFrames={audio.hookFrames}
+            onScreen={null}
+          />
         </Series.Sequence>
 
         {script.beats.map((beat, i) => (
           <Series.Sequence key={i} durationInFrames={audio.beatFrames[i] ?? 1}>
             <Scene
-              src={imageFor(i + 1)}
+              backgroundPath={frameFor(i + 1)?.backgroundPath ?? ''}
+              spritePath={frameFor(i + 1)?.spritePath ?? null}
               durationInFrames={audio.beatFrames[i] ?? 1}
               onScreen={beat.onScreen}
             />
