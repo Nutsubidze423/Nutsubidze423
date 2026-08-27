@@ -1,0 +1,22 @@
+[
+  {
+    "id": "placeholder-1",
+    "name": "PLACEHOLDER — replace before first real build",
+    "look": "a glossy chrome pelican wearing a tiny business suit, oversized reflective sunglasses, standing upright, plastic toy texture",
+    "seed": 101,
+    "voice": "onyx",
+    "personality": "Speaks entirely in confident corporate jargon about situations that have nothing to do with business. Never surprised.",
+    "catchphrase": "That's a Q3 problem.",
+    "approvedAt": "1970-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "placeholder-2",
+    "name": "PLACEHOLDER — replace before first real build",
+    "look": "a small anxious ceramic frog with enormous wet eyes, wearing a knitted scarf, matte glazed finish, slightly cracked",
+    "seed": 202,
+    "voice": "fable",
+    "personality": "Catastrophizes everything in a small worried voice. Is always, eventually, correct.",
+    "catchphrase": "I did mention this.",
+    "approvedAt": "1970-01-01T00:00:00.000Z"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "demo-001",
+    "premise": "The two of them are stuck in an elevator and only one of them has realized it is not moving because it is not an elevator.",
+    "hook": "We've been in here nine hours.",
+    "castIds": ["placeholder-1", "placeholder-2"],
+    "evidence": "Seed idea shipped with the scaffold so `npm run build:one` works before the ingest stage exists.",
+    "score": 0,
+    "source": "human",
+    "createdAt": "1970-01-01T00:00:00.000Z"
+  }
+]

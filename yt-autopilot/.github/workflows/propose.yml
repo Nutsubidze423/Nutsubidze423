@@ -1,0 +1,49 @@
+name: Weekly selection gate
+
+# The human gate. Opens one issue a week with generated premises; you tick the
+# ones you want. This issue is also the audit trail showing a human directed
+# each video — keep it, don't delete the closed ones.
+on:
+  schedule:
+    - cron: '0 9 * * 0'   # Sunday 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generate premises
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npm run ideate 20
+      - name: Open the gate issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const ideas = JSON.parse(fs.readFileSync('state/ideas.json', 'utf8'));
+            const week = new Date().toISOString().slice(0, 10);
+            const body = [
+              `Tick the premises you want made this week, edit the angles inline, then close this issue.`,
+              ``,
+              ...ideas.map(i => `- [ ] \`${i.id}\` **${i.hook}**\n      ${i.premise}`),
+              ``,
+              `<sub>Generated from the cast in \`content/cast.json\`. Editing an angle here is the creative input — use it.</sub>`,
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Selection gate — week of ${week}`,
+              body,
+              labels: ['selection-gate'],
+            });
