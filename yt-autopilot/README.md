@@ -27,6 +27,8 @@ ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  �
 | Assembly | `remotion/` | 1080×1920, karaoke captions, push-in motion, progress bar |
 | Packaging | `src/packaging/metadata.ts` | Title selection, learns from `metrics.json` once it has rows |
 | Publish | `src/publish/youtube.ts` | `DRY_RUN=true` by default |
+| Cost ledger | `src/cost.ts` | Real token usage, halts at the monthly ceiling |
+| Preflight | `src/doctor.ts` | `npm run doctor` — fails before spending, not during |
 
 **Not built yet, deliberately:**
 
@@ -47,18 +49,31 @@ npm install
 cp .env.example .env      # fill in your keys
 ```
 
-Then, **before your first real build**, do these two things by hand. They are
-the channel, and nothing downstream can invent them for you:
+```bash
+npm run doctor            # tells you exactly what is still missing
+```
 
-1. **`content/cast.json`** — replace both placeholders. The `look` string is
-   spliced verbatim into every image prompt, so it is the only thing keeping a
-   character recognizable across hundreds of videos. Write it once, carefully.
-2. **`content/bible.md`** — fill the `[BRACKETED]` sections. This file is
-   injected into every script prompt; the pipeline has no taste of its own.
+A starting cast ships in `content/cast.json`:
+
+| Character | Role in a scene | Voice |
+|---|---|---|
+| **Direttore Pellicano** | Confidently wrong. Manages the crisis into a worse crisis. | onyx |
+| **Ranocchia Piccola** | Anxiously right. Predicts it, is ignored, is correct. | fable |
+| **Nonna Frigorifero** | Entirely elsewhere. Offers food to people mid-catastrophe. | shimmer |
+
+Three positions that generate a scene from any pairing. **Edit them** — they are
+a starting point, not a decision. But once you start publishing, the `look`
+strings and `seed` values are locked: they are the only thing keeping a
+character recognizable across a back catalogue.
+
+The one thing still yours to write is the last section of **`content/bible.md`**
+— the rules specific to your sense of humor. That file is injected into every
+script prompt, and the pipeline has no taste of its own.
 
 ## Running one video
 
 ```bash
+npm run doctor                       # preflight — do this first
 npm run ideate 20                    # premises → state/ideas.json
 # move the ones you want into state/queue.json
 
@@ -73,6 +88,18 @@ npm run publish -- <id>              # dry run unless DRY_RUN=false
 
 A seed idea (`demo-001`) ships in `state/queue.json` so `build:one` works
 before you've written anything.
+
+### What it costs
+
+Every LLM call bills real token usage into `state/costs.json`; TTS bills by
+character and images bill only on cache miss. `build:one` prints the per-video
+and month-to-date figure when it finishes. Expect roughly **$0.60–0.90 per
+Short** — most of it images.
+
+Spending halts at `MONTHLY_COST_CEILING_USD` (default $120) rather than
+overrunning quietly. The price table at the top of `src/cost.ts` is
+hand-maintained — an out-of-date table makes the ceiling wrong in the dangerous
+direction, so check it against your billing after the first week.
 
 ## Getting the YouTube refresh token
 
@@ -107,3 +134,5 @@ login. It is the single point of failure for the whole operation.
   on real audio duration. The second one is the one that matters.
 - **Don't change `STYLE` in `src/visual/images.ts` mid-catalogue.** Old and new
   videos will read as two different channels.
+- **`.env` is loaded via Node's `--env-file-if-exists`**, wired into the npm
+  scripts. Running `tsx src/cli.ts` directly will not pick it up.

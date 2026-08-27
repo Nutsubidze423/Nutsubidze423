@@ -9,6 +9,8 @@ import { generateVisuals } from './visual/images.ts';
 import { buildMetadata } from './packaging/metadata.ts';
 import { upload } from './publish/youtube.ts';
 import type { RenderProps, Idea } from './types.ts';
+import { printDoctor } from './doctor.ts';
+import { billTo, forIdea, monthToDate } from './cost.ts';
 
 const OUT = join(process.cwd(), 'out');
 
@@ -21,6 +23,7 @@ function outDir(id: string): string {
 /** Build one Short end to end, stopping before upload. */
 async function build(idea: Idea): Promise<string> {
   const dir = outDir(idea.id);
+  billTo(idea.id);
   console.log(`\n[${idea.id}] ${idea.premise}`);
 
   console.log('  script…');
@@ -47,6 +50,7 @@ async function build(idea: Idea): Promise<string> {
   const props: RenderProps = { script, audio, visuals };
   writeFileSync(join(dir, 'props.json'), JSON.stringify(props, null, 2));
   console.log(`  → ${join(dir, 'props.json')}`);
+  console.log(`  cost: $${forIdea(idea.id).toFixed(3)} this video, $${monthToDate().toFixed(2)} month to date`);
   return dir;
 }
 
@@ -54,6 +58,11 @@ async function main() {
   const [cmd, arg] = process.argv.slice(2);
 
   switch (cmd) {
+    case 'doctor': {
+      process.exit(printDoctor() ? 0 : 1);
+      break;
+    }
+
     case 'ideate': {
       const ideas = await generateIdeas(Number(arg) || 20);
       state.ideas.save(ideas);
@@ -108,6 +117,7 @@ async function main() {
       console.log(`
 yt-autopilot
 
+  npm run doctor               preflight: keys, cast, bible, spend
   npm run ideate [n]           generate n premises → state/ideas.json
   npm run build:one [ideaId]   script → voice → visuals → props.json
   npm run studio               preview in Remotion Studio

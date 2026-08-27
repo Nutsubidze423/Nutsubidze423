@@ -1,9 +1,12 @@
 [
   {
     "id": "demo-001",
-    "premise": "The two of them are stuck in an elevator and only one of them has realized it is not moving because it is not an elevator.",
+    "premise": "The two of them have been standing in a lift for nine hours and only one of them has worked out that it is not a lift.",
     "hook": "We've been in here nine hours.",
-    "castIds": ["placeholder-1", "placeholder-2"],
+    "castIds": [
+      "pellicano",
+      "ranocchia"
+    ],
     "evidence": "Seed idea shipped with the scaffold so `npm run build:one` works before the ingest stage exists.",
     "score": 0,
     "source": "human",

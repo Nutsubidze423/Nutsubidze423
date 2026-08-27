@@ -5,14 +5,15 @@
   "type": "module",
   "description": "Agent-operated production pipeline for a faceless YouTube Shorts channel",
   "scripts": {
-    "ideate": "tsx src/cli.ts ideate",
-    "script": "tsx src/cli.ts script",
-    "voice": "tsx src/cli.ts voice",
-    "visuals": "tsx src/cli.ts visuals",
-    "build:one": "tsx src/cli.ts build",
-    "publish": "tsx src/cli.ts publish",
+    "doctor": "tsx --env-file-if-exists=.env src/cli.ts doctor",
+    "ideate": "tsx --env-file-if-exists=.env src/cli.ts ideate",
+    "script": "tsx --env-file-if-exists=.env src/cli.ts script",
+    "voice": "tsx --env-file-if-exists=.env src/cli.ts voice",
+    "visuals": "tsx --env-file-if-exists=.env src/cli.ts visuals",
+    "build:one": "tsx --env-file-if-exists=.env src/cli.ts build",
+    "publish": "tsx --env-file-if-exists=.env src/cli.ts publish",
     "studio": "remotion studio remotion/index.ts",
-    "render": "tsx src/cli.ts render",
+    "render": "tsx --env-file-if-exists=.env src/cli.ts render",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

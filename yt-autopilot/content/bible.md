@@ -15,6 +15,19 @@ clearest evidence that a human is directing the channel rather than a prompt
 loop. Disconnected AI clips at volume are exactly the pattern YouTube's
 inauthentic content policy targets. The cast is both the moat and the defense.
 
+## The cast
+
+| Character | Role in a scene | Voice |
+|---|---|---|
+| **Direttore Pellicano** | Confidently wrong. Manages the crisis into a worse crisis. | onyx |
+| **Ranocchia Piccola** | Anxiously right. Predicts it, is ignored, is correct. | fable |
+| **Nonna Frigorifero** | Entirely elsewhere. Offers food to people mid-catastrophe. | shimmer |
+
+Three positions that generate a scene from any pairing. Edit the personalities
+freely — but once you start publishing, the `look` strings and `seed` values in
+`cast.json` are locked. They are the only thing keeping a character
+recognizable across a back catalogue.
+
 ## Audience
 
 Teens and adults who are fluent in meme formats and watch Shorts in long
@@ -27,11 +40,20 @@ nothing is uploaded with the Made for Kids flag set.
    anything is strange.
 2. Commit to the bit fully. No winking at the camera.
 3. Escalate, never explain. Each beat raises the stakes of the last.
-4. Characters have fixed speech patterns. [DEFINE PER CHARACTER IN cast.json]
+4. Characters have fixed speech patterns, defined in `cast.json`. Pellicano
+   never drops the corporate register even mid-disaster. Ranocchia never
+   raises her voice. Nonna never answers the question she was asked.
 5. The absurdity is the premise, not the vocabulary. Write plain sentences.
 6. Short lines. Under 18 words, usually under 12.
 7. The payoff loops back to the hook — a rewatch should land differently.
-8. [ADD YOUR OWN — five more rules that are specific to your sense of humor]
+8. The comedy comes from collision, not from any one character being funny.
+   Pellicano manages, Ranocchia warns, Nonna feeds — put any two in a room and
+   a scene happens on its own.
+9. Nobody ever wins an argument. The scene ends because it ends.
+10. Catchphrases are earned, not scattered. At most one per video, and only
+    when the situation has actually built to it.
+11. [ADD YOUR OWN — the rules that are specific to your sense of humor. This
+    is the part no pipeline can write for you.]
 
 ## Banned constructions
 

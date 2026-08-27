@@ -44,6 +44,7 @@ ${history ? `WHAT THIS CHANNEL'S TITLES ACTUALLY DID:\n${history}\n` : 'No perfo
 Return ONLY JSON: {"title":"<=80 chars","description":"2-3 lines then #Shorts","tags":["..."]}
 `.trim(),
     maxTokens: 800,
+    stage: 'metadata',
     validate: raw => Meta.parse(raw),
   });
 }

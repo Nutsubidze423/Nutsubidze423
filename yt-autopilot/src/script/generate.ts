@@ -44,6 +44,7 @@ the promise mismatch that kills watch-through.
     system: WRITER_SYSTEM(bible, cast),
     prompt,
     maxTokens: 3000,
+    stage: 'script',
     validate: raw => {
       const parsed = Script.parse(raw);
       return { ...parsed, estimatedSeconds: estimateSeconds(parsed) };
@@ -63,6 +64,7 @@ export async function generateScript(idea: Idea): Promise<Script> {
     const critique = await askText(
       CRITIC_SYSTEM,
       `Script under review:\n\n${JSON.stringify(script, null, 2)}`,
+      'script',
       1024,
     );
 

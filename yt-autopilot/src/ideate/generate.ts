@@ -48,6 +48,7 @@ ${count} variations of one situation. Return ONLY JSON:
 {"ideas":[{"premise":"one sentence","hook":"the opening line, max 12 words","castIds":["..."],"evidence":"why this one works"}]}
 `.trim(),
     maxTokens: 4000,
+    stage: 'ideate',
     validate: raw => Raw.parse(raw),
   });
 

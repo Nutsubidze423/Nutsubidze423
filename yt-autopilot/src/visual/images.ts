@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { config } from '../config.ts';
 import { state } from '../state.ts';
 import type { Script, VisualManifest } from '../types.ts';
+import { recordImage, assertUnderCeiling } from '../cost.ts';
 
 const CACHE = join(process.cwd(), 'assets', 'cache');
 
@@ -78,15 +79,20 @@ export async function generateVisuals(script: Script, castIds: string[], outDir:
   ];
 
   const images: VisualManifest['images'] = [];
+  let generated = 0;
   for (const { beatIndex, cue, ids } of cues) {
     const { prompt, seed } = promptFor(cue, ids);
     const key = cacheKey(prompt, seed);
     const cached = join(CACHE, `${key}.png`);
 
     if (!existsSync(cached)) {
+      assertUnderCeiling();
       writeFileSync(cached, await callImageApi(prompt, seed));
+      generated++;
     }
     images.push({ beatIndex, path: cached, cacheKey: key });
   }
+  // Cache hits are free; only bill what was actually generated.
+  if (generated > 0) recordImage(generated);
   return { images };
 }

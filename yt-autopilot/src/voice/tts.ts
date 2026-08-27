@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { config } from '../config.ts';
 import { state } from '../state.ts';
 import type { Script } from '../types.ts';
+import { recordTts, assertUnderCeiling } from '../cost.ts';
 
 /** One voice per character, permanently. In the absence of a face, voice is
  *  the channel's only consistent identity signal — treat it as brand and
@@ -41,6 +42,9 @@ export async function synthesize(script: Script, outDir: string): Promise<Line[]
   if (provider !== 'openai') {
     throw new Error(`TTS_PROVIDER="${provider}" not implemented yet — only "openai" is wired up.`);
   }
+
+  assertUnderCeiling();
+  recordTts(lines.reduce((n, l) => n + l.text.length, 0));
 
   const out: Line[] = [];
   for (const [i, line] of lines.entries()) {

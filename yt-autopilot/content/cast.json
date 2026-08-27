@@ -1,22 +1,32 @@
 [
   {
-    "id": "placeholder-1",
-    "name": "PLACEHOLDER — replace before first real build",
-    "look": "a glossy chrome pelican wearing a tiny business suit, oversized reflective sunglasses, standing upright, plastic toy texture",
-    "seed": 101,
+    "id": "pellicano",
+    "name": "Direttore Pellicano",
+    "look": "a tall pelican standing upright on two legs, body of polished mirror chrome, wearing a charcoal double-breasted business suit with a crimson silk tie, enormous mirrored aviator sunglasses covering the eyes, long chrome beak, clutching a tiny oxblood leather briefcase under one wing",
+    "seed": 10731,
     "voice": "onyx",
-    "personality": "Speaks entirely in confident corporate jargon about situations that have nothing to do with business. Never surprised.",
+    "personality": "Speaks entirely in corporate strategy language about situations that have nothing to do with business. Treats every unfolding catastrophe as a scheduling matter. Is never, under any circumstances, surprised.",
     "catchphrase": "That's a Q3 problem.",
-    "approvedAt": "1970-01-01T00:00:00.000Z"
+    "approvedAt": "2026-08-27T00:00:00.000Z"
   },
   {
-    "id": "placeholder-2",
-    "name": "PLACEHOLDER — replace before first real build",
-    "look": "a small anxious ceramic frog with enormous wet eyes, wearing a knitted scarf, matte glazed finish, slightly cracked",
-    "seed": 202,
+    "id": "ranocchia",
+    "name": "Ranocchia Piccola",
+    "look": "a very small pale green ceramic frog with enormous glossy black eyes, a fine hairline crack running down one cheek, wearing an oversized mustard-yellow knitted scarf wound several times around its neck, matte glazed finish, sitting hunched with both front feet together",
+    "seed": 20482,
     "voice": "fable",
-    "personality": "Catastrophizes everything in a small worried voice. Is always, eventually, correct.",
+    "personality": "Catastrophizes quietly and very specifically, in a small worried voice. Is always, eventually, exactly right about what was going to happen, and takes no satisfaction whatsoever in it.",
     "catchphrase": "I did mention this.",
-    "approvedAt": "1970-01-01T00:00:00.000Z"
+    "approvedAt": "2026-08-27T00:00:00.000Z"
+  },
+  {
+    "id": "nonna",
+    "name": "Nonna Frigorifero",
+    "look": "a squat vintage cream-enamel refrigerator standing on four stubby chrome legs, an elderly woman's face moulded into the freezer door with deep smile lines and small round spectacles, a floral apron tied around its middle, door hanging slightly ajar and spilling warm yellow light",
+    "seed": 30914,
+    "voice": "shimmer",
+    "personality": "Offers food that does not exist to people who did not ask for it. Runs on a conversational track parallel to everyone else's that never once intersects. Entirely unbothered.",
+    "catchphrase": "There's more in the back.",
+    "approvedAt": "2026-08-27T00:00:00.000Z"
   }
 ]
