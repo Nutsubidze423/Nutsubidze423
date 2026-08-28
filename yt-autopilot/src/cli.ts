@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { state } from './state.ts';
 import { generateScript } from './script/generate.ts';
@@ -11,6 +11,8 @@ import { buildMetadata } from './packaging/metadata.ts';
 import { upload } from './publish/youtube.ts';
 import type { RenderProps, Idea } from './types.ts';
 import { printDoctor } from './doctor.ts';
+import { applyGate } from './gate.ts';
+import { render } from './render.ts';
 import { billTo, forIdea, monthToDate } from './cost.ts';
 
 const OUT = join(process.cwd(), 'out');
@@ -54,10 +56,74 @@ async function build(idea: Idea): Promise<string> {
   return dir;
 }
 
+async function publishOne(idea: Idea): Promise<void> {
+  const dir = join(OUT, idea.id);
+  const videoPath = join(dir, 'video.mp4');
+  if (!existsSync(videoPath)) throw new Error(`No render at ${videoPath}. Run: npm run render -- ${idea.id}`);
+
+  const props: RenderProps = JSON.parse(readFileSync(join(dir, 'props.json'), 'utf8'));
+  billTo(idea.id);
+  const meta = await buildMetadata(props.script, idea.castIds);
+  console.log(`  title: ${meta.title}`);
+
+  const res = await upload(videoPath, meta);
+  if (!res.dryRun) {
+    state.published.add({
+      ideaId: idea.id,
+      videoId: res.videoId,
+      title: meta.title,
+      publishedAt: new Date().toISOString(),
+      castIds: idea.castIds,
+      costUsd: forIdea(idea.id),
+    });
+  }
+  console.log(res.dryRun ? '  dry run — not uploaded' : `  published: https://youtube.com/watch?v=${res.videoId}`);
+}
+
 async function main() {
   const [cmd, arg] = process.argv.slice(2);
 
   switch (cmd) {
+    case 'gate': {
+      // Body arrives on stdin so the workflow needn't escape issue markdown.
+      const body = readFileSync(0, 'utf8');
+      const n = applyGate(body);
+      console.log(`Queued ${n} approved idea(s).`);
+      break;
+    }
+
+    case 'render': {
+      const id = arg ?? state.queue.all()[0]?.id;
+      if (!id) { console.error('Nothing to render.'); process.exit(1); }
+      console.log(`Rendering ${id}…`);
+      console.log(`  → ${await render(id)}`);
+      break;
+    }
+
+    /** The whole loop, for CI: build → render → publish, per queued idea. */
+    case 'run': {
+      const queue = state.queue.all();
+      if (queue.length === 0) { console.log('Queue is empty — nothing to do.'); break; }
+
+      const remaining = [...queue];
+      for (const idea of queue) {
+        try {
+          await build(idea);
+          await render(idea.id);
+          await publishOne(idea);
+          remaining.shift();
+          state.queue.save(remaining);
+        } catch (err) {
+          // One bad idea must not strand the rest of the week's queue.
+          console.error(`\n[${idea.id}] failed: ${String(err instanceof Error ? err.message : err)}`);
+          remaining.shift();
+          state.queue.save(remaining);
+        }
+      }
+      console.log(`\nTotal spend this month: $${monthToDate().toFixed(2)}`);
+      break;
+    }
+
     case 'library': {
       await buildLibrary({ dryRun: arg === '--dry' });
       break;
@@ -90,31 +156,10 @@ async function main() {
     }
 
     case 'publish': {
-      if (!arg) { console.error('Usage: publish <ideaId>'); process.exit(1); }
-      const dir = join(OUT, arg);
-      const videoPath = join(dir, 'video.mp4');
-      if (!existsSync(videoPath)) {
-        console.error(`No render at ${videoPath}. Run: npx remotion render remotion/index.ts Short ${videoPath} --props=${join(dir, 'props.json')}`);
-        process.exit(1);
-      }
-      const props: RenderProps = JSON.parse(
-        await import('node:fs/promises').then(fs => fs.readFile(join(dir, 'props.json'), 'utf8')),
-      );
-      const idea = state.queue.all().find(i => i.id === arg);
-      const meta = await buildMetadata(props.script, idea?.castIds ?? []);
-      console.log(`Title: ${meta.title}`);
-      const res = await upload(videoPath, meta);
-      if (!res.dryRun) {
-        state.published.add({
-          ideaId: arg,
-          videoId: res.videoId,
-          title: meta.title,
-          publishedAt: new Date().toISOString(),
-          castIds: idea?.castIds ?? [],
-          costUsd: 0,
-        });
-      }
-      console.log(res.dryRun ? 'Dry run complete.' : `Published: https://youtube.com/watch?v=${res.videoId}`);
+      const id = arg ?? state.queue.all()[0]?.id;
+      if (!id) { console.error('Usage: publish <ideaId>'); process.exit(1); }
+      const idea = state.queue.all().find(i => i.id === id);
+      await publishOne(idea ?? { id, castIds: [] } as unknown as Idea);
       break;
     }
 
@@ -127,10 +172,10 @@ yt-autopilot
   npm run ideate [n]           generate n premises → state/ideas.json
   npm run build:one [ideaId]   script → voice → visuals → props.json
   npm run studio               preview in Remotion Studio
+  npm run render -- <ideaId>   render out/<id>/video.mp4
   npm run publish -- <ideaId>  upload (DRY_RUN=true by default)
 
-Render between build and publish:
-  npx remotion render remotion/index.ts Short out/<id>/video.mp4 --props=out/<id>/props.json
+  npm run autopilot            build + render + publish everything queued
 `.trim());
   }
 }

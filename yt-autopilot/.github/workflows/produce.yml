@@ -1,0 +1,80 @@
+name: Produce
+
+# Fires when you close the weekly selection issue. Everything from here is
+# unattended: parse the ticked boxes, build, render, publish, commit state.
+on:
+  issues:
+    types: [closed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  produce:
+    # Only the gate issue triggers a run, not every closed issue.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(join(github.event.issue.labels.*.name, ','), 'selection-gate')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Remotion renders through headless Chromium; these are its system deps.
+      - name: Install render dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libnss3 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
+            libxrandr2 libgbm1 libasound2t64 || true
+
+      - name: Queue the approved ideas
+        if: github.event_name == 'issues'
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: printf '%s' "$ISSUE_BODY" | npm run --silent gate
+
+      - name: Preflight
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TTS_API_KEY: ${{ secrets.TTS_API_KEY }}
+          IMAGE_API_KEY: ${{ secrets.IMAGE_API_KEY }}
+        run: npm run doctor
+
+      - name: Build, render, publish
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TTS_API_KEY: ${{ secrets.TTS_API_KEY }}
+          IMAGE_API_KEY: ${{ secrets.IMAGE_API_KEY }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          # Flip this repo variable to "false" when you are ready to go live.
+          DRY_RUN: ${{ vars.DRY_RUN || 'true' }}
+        run: npm run autopilot
+
+      - name: Keep the videos for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shorts
+          path: out/**/video.mp4
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Commit state
+        if: always()
+        run: |
+          git config user.name  "yt-autopilot"
+          git config user.email "actions@github.com"
+          git add state/
+          git diff --staged --quiet || git commit -m "chore: record run $(date -u +%Y-%m-%d)"
+          git push

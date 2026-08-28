@@ -3,6 +3,8 @@
 Agent-operated production pipeline for a faceless YouTube **Shorts** channel.
 Absurdist meme comedy with a recurring cast.
 
+**Getting started: [SETUP.md](SETUP.md)** — one-time, ~45 minutes.
+
 Companion to `docs/faceless-yt-automation-master-plan.md`.
 
 ---
@@ -12,6 +14,7 @@ Companion to `docs/faceless-yt-automation-master-plan.md`.
 ```
 ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  →  publish
   ✅            ✅            ✅        ✅         ✅          ✅          ✅
+         ↑ 10 min/week      └──────── unattended, in CI ────────────┘
 ```
 
 **Built and typechecking clean:**
@@ -28,6 +31,8 @@ ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  �
 | Assembly | `remotion/` | 1080×1920, karaoke captions, push-in motion, progress bar |
 | Packaging | `src/packaging/metadata.ts` | Title selection, learns from `metrics.json` once it has rows |
 | Publish | `src/publish/youtube.ts` | `DRY_RUN=true` by default |
+| Gate parser | `src/gate.ts` | Ticked boxes → queue; human edits win over generated text |
+| Orchestration | `.github/workflows/produce.yml` | Close the issue → build, render, publish, commit |
 | Cost ledger | `src/cost.ts` | Real token usage, halts at the monthly ceiling |
 | Preflight | `src/doctor.ts` | `npm run doctor` — fails before spending, not during |
 
@@ -38,8 +43,6 @@ ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  �
   and a scorer with no signal just launders randomness through arithmetic.
   Build `src/ideate/score.ts` once `state/metrics.json` has ~30 rows.
 - **Analytics feedback loop.** Same reason — nothing to learn from yet.
-- **`produce.yml`.** Wire it after you've run the pipeline by hand a few times
-  and know where it actually breaks.
 
 ---
 
