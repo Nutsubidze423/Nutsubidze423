@@ -9,6 +9,7 @@ import type { RenderProps } from '../src/types.ts';
 const placeholder: RenderProps = {
   script: {
     ideaId: 'placeholder',
+    shape: 'escalation' as const,
     hook: { text: 'Open the studio to preview a real build', speakerId: null },
     beats: [{ text: 'Run npm run build:one first', speakerId: null, backgroundId: 'void', pose: 'neutral', onScreen: null }],
     payoff: '',

@@ -4,9 +4,11 @@ import type { RenderProps } from '../src/types.ts';
 import { Scene } from './components/Scene.tsx';
 import { Captions } from './components/Captions.tsx';
 import { Progress } from './components/Progress.tsx';
+import { treatmentFor } from './treatment.ts';
 
 export const Short: React.FC<RenderProps> = ({ script, audio, visuals }) => {
   const frameFor = (beatIndex: number) => visuals.frames.find(f => f.beatIndex === beatIndex);
+  const treatment = treatmentFor(script.ideaId);
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
@@ -19,6 +21,7 @@ export const Short: React.FC<RenderProps> = ({ script, audio, visuals }) => {
             spritePath={frameFor(0)?.spritePath ?? null}
             durationInFrames={audio.hookFrames}
             onScreen={null}
+            treatment={treatment}
           />
         </Series.Sequence>
 
@@ -29,14 +32,15 @@ export const Short: React.FC<RenderProps> = ({ script, audio, visuals }) => {
               spritePath={frameFor(i + 1)?.spritePath ?? null}
               durationInFrames={audio.beatFrames[i] ?? 1}
               onScreen={beat.onScreen}
+              treatment={treatment}
             />
           </Series.Sequence>
         ))}
       </Series>
 
       {/* Captions and progress sit above every scene, spanning the whole video. */}
-      <Captions words={audio.words} />
-      <Progress />
+      <Captions words={audio.words} treatment={treatment} />
+      {treatment.showProgress ? <Progress accent={treatment.accent} /> : null}
     </AbsoluteFill>
   );
 };

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { askJson } from '../llm.ts';
 import { state } from '../state.ts';
 import { Idea } from '../types.ts';
+import { screen } from './dedupe.ts';
 
 const Raw = z.object({
   ideas: z.array(z.object({
@@ -24,7 +25,9 @@ const Raw = z.object({
 export async function generateIdeas(count = 20): Promise<Idea[]> {
   const cast = state.cast.all();
   const bible = state.bible();
-  const recent = state.published.all().slice(-40).map(p => p.title);
+  // A short in-prompt list steers the model away from the obvious repeats;
+  // the embedding screen below is what actually enforces novelty.
+  const recent = state.published.all().slice(-20).map(p => p.title);
 
   if (cast.length === 0) throw new Error('content/cast.json is empty — define the cast first.');
 
@@ -52,11 +55,23 @@ ${count} variations of one situation. Return ONLY JSON:
     validate: raw => Raw.parse(raw),
   });
 
-  return ideas.map(i => Idea.parse({
+  const parsed = ideas.map(i => Idea.parse({
     ...i,
     id: randomUUID().slice(0, 8),
     score: 0,
     source: 'cast-lore' as const,
     createdAt: new Date().toISOString(),
   }));
+
+  const { kept, rejected } = await screen(parsed);
+  for (const r of rejected) {
+    console.log(`  dropped (${(r.score * 100).toFixed(0)}% similar): ${r.item.premise.slice(0, 70)}…`);
+  }
+  if (kept.length === 0) {
+    throw new Error(
+      'Every generated premise duplicated something already made. The cast has ' +
+      'run out of road — add characters or locations, or widen the bible.',
+    );
+  }
+  return kept;
 }

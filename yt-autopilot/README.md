@@ -19,8 +19,33 @@ ideate  →  [gate]  →  script  →  voice  →  visuals  →  render  →  pu
 
 Two modes, switched by the `AUTO_APPROVE` repository variable:
 
-- **Autopilot** — daily, no human, ~3 videos/day, ~$7/month
+- **Autopilot** — daily, no human, 1 video/day by default, ~$2.40/month
 - **Gated** — a weekly issue you tick, ~10 min/week
+
+### Anti-sameness
+
+Thirty videos that share a structure and a look read as one template with the
+words swapped — which is both the "repetitive" half of the inauthentic content
+policy and simply dull. Three mechanisms push against it:
+
+- **Premise dedupe** embeds each candidate and compares it against *every*
+  premise ever published, not a rolling window of titles. Near-duplicates are
+  dropped before they cost anything.
+- **Five script shapes** — escalation, crosstalk, list, reversal,
+  interrogation — rotated least-recently-used, so the catalogue covers all
+  five instead of drifting to whichever the model writes most easily.
+- **Per-video treatment** varies caption placement and grouping, background
+  motion, sprite entry, accent colour and whether the progress bar shows.
+  Derived from the video id, so a re-render is identical but no two videos are.
+
+### The brakes
+
+An unattended pipeline with no brakes will publish two hundred videos nobody
+watches. `src/feedback/breaker.ts` holds publishing when average view
+percentage over the last 10 videos falls below 30%. It needs metrics for most
+of that window before it can fire, so it never trips on absence of data, and
+production still runs — only the upload is held, so the artifacts are there to
+look at. Override with `DISABLE_BREAKER=true`.
 
 See [SETUP.md](SETUP.md) for the tradeoff.
 
@@ -38,6 +63,11 @@ See [SETUP.md](SETUP.md) for the tradeoff.
 | Assembly | `remotion/` | 1080×1920, karaoke captions, push-in motion, progress bar |
 | Packaging | `src/packaging/metadata.ts` | Title selection, learns from `metrics.json` once it has rows |
 | Publish | `src/publish/youtube.ts` | `DRY_RUN=true` by default |
+| Dedupe | `src/ideate/dedupe.ts` | Premise embeddings vs the whole catalogue |
+| Shapes | `src/script/shapes.ts` | Five structures, least-recently-used rotation |
+| Treatment | `remotion/treatment.ts` | Per-video framing, motion, accent |
+| Analytics | `src/feedback/analytics.ts` | Lifetime metrics per video |
+| Breaker | `src/feedback/breaker.ts` | Holds publishing when retention collapses |
 | Gate parser | `src/gate.ts` | Ticked boxes → queue; human edits win over generated text |
 | Orchestration | `.github/workflows/daily.yml` | Autopilot (no human) or gated, by repo variable |
 | | `.github/workflows/produce.yml` | Gated mode: close the issue → produce |
@@ -46,11 +76,9 @@ See [SETUP.md](SETUP.md) for the tradeoff.
 
 **Not built yet, deliberately:**
 
-- **Trend mining / idea scoring.** Needs a back catalogue to measure novelty
-  against and published metrics to weight by. On a new channel both are empty,
-  and a scorer with no signal just launders randomness through arithmetic.
-  Build `src/ideate/score.ts` once `state/metrics.json` has ~30 rows.
-- **Analytics feedback loop.** Same reason — nothing to learn from yet.
+- **Trend mining / idea ranking.** Metrics now land in `state/metrics.json`,
+  but ranking needs enough rows to mean something. Build `src/ideate/score.ts`
+  once there are ~30.
 
 ---
 

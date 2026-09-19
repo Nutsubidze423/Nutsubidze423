@@ -10,7 +10,7 @@ export function castBlock(cast: Character[]): string {
     .join('\n');
 }
 
-export const WRITER_SYSTEM = (bible: string, cast: Character[], backgrounds: string[]) => `
+export const WRITER_SYSTEM = (bible: string, cast: Character[], backgrounds: string[], shape: { label: string; direction: string; beats: [number, number] }) => `
 You write scripts for a faceless YouTube Shorts channel. Absurdist meme comedy
 with a recurring cast — a show with continuity, not disconnected clips.
 
@@ -25,7 +25,12 @@ FORMAT RULES — these are hard constraints, not preferences:
   a brisk pace. That is roughly 110-145 words TOTAL. Count before you answer.
 - The hook is one line, max 12 words. It must work with zero context, because
   the viewer has zero context and roughly two seconds of patience.
-- 3 to 6 beats. Each beat is one spoken line, under 18 words. No slow burn.
+- ${shape.beats[0]} to ${shape.beats[1]} beats. Each beat is one spoken line,
+  under 18 words. No slow burn.
+
+THE SHAPE OF THIS ONE — ${shape.label}:
+${shape.direction}
+This is the structure. Do not fall back into a generic escalating bit.
 - The payoff line must loop back to the hook, so a rewatch feels intentional.
   Rewatches are the cheapest retention on Shorts.
 - Every beat picks a backgroundId from this list, and nothing else:

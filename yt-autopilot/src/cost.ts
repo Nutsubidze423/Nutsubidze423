@@ -5,7 +5,7 @@ import { config } from './config.ts';
 export type CostEntry = {
   at: string;
   ideaId: string;
-  stage: 'script' | 'ideate' | 'metadata' | 'voice' | 'visual';
+  stage: 'script' | 'ideate' | 'metadata' | 'voice' | 'visual' | 'embed';
   usd: number;
   detail: string;
 };
@@ -27,6 +27,8 @@ export const PRICES = {
   /** gpt-image-1, USD per generated image at 1024x1536. Varies with quality —
    *  verify against your own billing after the first week. */
   perImage: 0.08,
+  /** text-embedding-3-small, USD per million tokens. */
+  embedPerMTokens: 0.02,
 } as const;
 
 /** The run currently being billed. Set once by the CLI so the LLM and asset
@@ -71,6 +73,9 @@ export const recordTts = (chars: number) =>
 
 export const recordImage = (n: number) =>
   record('visual', n * PRICES.perImage, `${n} image${n === 1 ? '' : 's'}`);
+
+export const recordEmbed = (tokens: number) =>
+  record('embed', (tokens / 1e6) * PRICES.embedPerMTokens, `${tokens} tokens`);
 
 export function monthToDate(): number {
   const prefix = new Date().toISOString().slice(0, 7); // YYYY-MM

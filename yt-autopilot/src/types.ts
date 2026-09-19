@@ -51,6 +51,8 @@ export type Beat = z.infer<typeof Beat>;
 
 export const Script = z.object({
   ideaId: z.string(),
+  /** Which structural shape this one uses — see src/script/shapes.ts. */
+  shape: z.enum(['escalation', 'crosstalk', 'list', 'reversal', 'interrogation']),
   /** First 2 seconds decide everything on Shorts. Hard cap enforced downstream. */
   hook: z.object({ text: z.string(), speakerId: z.string().nullable() }),
   beats: z.array(Beat).min(3).max(8),
@@ -101,6 +103,7 @@ export const PublishedVideo = z.object({
   ideaId: z.string(),
   videoId: z.string(),
   title: z.string(),
+  shape: z.string().optional(),
   publishedAt: z.string(),
   castIds: z.array(z.string()),
   costUsd: z.number(),

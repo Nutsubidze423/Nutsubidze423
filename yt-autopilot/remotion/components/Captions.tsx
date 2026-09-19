@@ -2,12 +2,12 @@ import React from 'react';
 import { useCurrentFrame, useVideoConfig } from 'remotion';
 import type { WordTiming } from '../../src/types.ts';
 import { theme, outlined } from '../theme.ts';
+import type { Treatment } from '../treatment.ts';
 
 /** Words are grouped into short phrases rather than shown one at a time.
  *  A single word gives the eye nothing to track; 3-4 words reads as speech. */
-const GROUP = 3;
-
-export const Captions: React.FC<{ words: WordTiming[] }> = ({ words }) => {
+export const Captions: React.FC<{ words: WordTiming[]; treatment: Treatment }> = ({ words, treatment }) => {
+  const GROUP = treatment.captionGroup;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const nowMs = (frame / fps) * 1000;
@@ -22,7 +22,7 @@ export const Captions: React.FC<{ words: WordTiming[] }> = ({ words }) => {
     <div
       style={{
         position: 'absolute',
-        bottom: theme.caption.bottomInset,
+        bottom: treatment.captionPosition === 'centre' ? '48%' : theme.caption.bottomInset,
         left: '50%',
         transform: 'translateX(-50%)',
         width: theme.caption.maxWidth,
@@ -44,7 +44,7 @@ export const Captions: React.FC<{ words: WordTiming[] }> = ({ words }) => {
           <span
             key={`${w.startMs}-${i}`}
             style={{
-              color: isActive ? theme.caption.activeFill : theme.caption.fill,
+              color: isActive ? treatment.accent : theme.caption.fill,
               transform: isActive ? 'scale(1.12)' : 'scale(1)',
               display: 'inline-block',
             }}

@@ -14,6 +14,9 @@ import { printDoctor } from './doctor.ts';
 import { applyGate } from './gate.ts';
 import { render } from './render.ts';
 import { billTo, forIdea, monthToDate } from './cost.ts';
+import { remember } from './ideate/dedupe.ts';
+import { fetchMetrics } from './feedback/analytics.ts';
+import { check as checkBreaker } from './feedback/breaker.ts';
 
 const OUT = join(process.cwd(), 'out');
 
@@ -72,10 +75,14 @@ async function publishOne(idea: Idea): Promise<void> {
       ideaId: idea.id,
       videoId: res.videoId,
       title: meta.title,
+      shape: props.script.shape,
       publishedAt: new Date().toISOString(),
       castIds: idea.castIds,
       costUsd: forIdea(idea.id),
     });
+    // Only remember what actually shipped, so a failed build does not burn
+    // the premise.
+    await remember(idea.id, idea.premise);
   }
   console.log(res.dryRun ? '  dry run — not uploaded' : `  published: https://youtube.com/watch?v=${res.videoId}`);
 }
@@ -100,10 +107,27 @@ async function main() {
       break;
     }
 
+    case 'metrics': {
+      const rows = await fetchMetrics();
+      console.log(`Fetched metrics for ${rows.length} video(s).`);
+      const v = checkBreaker();
+      console.log(v.tripped ? `BREAKER TRIPPED — ${v.reason}` : `Breaker OK — ${v.reason}`);
+      break;
+    }
+
     /** The whole loop, for CI: build → render → publish, per queued idea. */
     case 'run': {
       const queue = state.queue.all();
       if (queue.length === 0) { console.log('Queue is empty — nothing to do.'); break; }
+
+      // Check before spending anything, not after.
+      const verdict = checkBreaker();
+      if (verdict.tripped) {
+        console.error(`\nBREAKER TRIPPED\n${verdict.reason}\n`);
+        console.error('Set DISABLE_BREAKER=true to override.');
+        process.exit(2);
+      }
+      console.log(`Breaker: ${verdict.reason}`);
 
       const remaining = [...queue];
       for (const idea of queue) {
@@ -191,6 +215,7 @@ yt-autopilot
   npm run publish -- <ideaId>  upload (DRY_RUN=true by default)
 
   npm run autopilot            build + render + publish everything queued
+  npm run metrics              pull analytics, report the retention breaker
 `.trim());
   }
 }

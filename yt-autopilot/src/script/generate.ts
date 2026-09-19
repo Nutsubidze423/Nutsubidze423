@@ -3,6 +3,7 @@ import { askJson, askText } from '../llm.ts';
 import { WRITER_SYSTEM, CRITIC_SYSTEM } from './prompts.ts';
 import { state } from '../state.ts';
 import { scenery } from '../visual/library.ts';
+import { SHAPES, nextShape, type ShapeId } from './shapes.ts';
 import { MAX_DURATION_SEC } from '../config.ts';
 
 /** Spoken-word estimate. Deliberately conservative: overrunning 60s gets the
@@ -17,7 +18,7 @@ export function estimateSeconds(s: Pick<Script, 'hook' | 'beats' | 'payoff'>): n
   return words / WORDS_PER_SEC;
 }
 
-async function draft(idea: Idea, cast: Character[], bible: string, backgrounds: string[], notes?: string[]): Promise<Script> {
+async function draft(idea: Idea, cast: Character[], bible: string, backgrounds: string[], shape: ShapeId, notes?: string[]): Promise<Script> {
   const prompt = `
 Write the Short for this premise.
 
@@ -29,6 +30,7 @@ ${notes?.length ? `\nThe previous draft was rejected. Fix exactly these:\n${note
 Return ONLY a JSON object:
 {
   "ideaId": ${JSON.stringify(idea.id)},
+  "shape": ${JSON.stringify(shape)},
   "hook": {"text": "...", "speakerId": "<cast id or null>"},
   "beats": [{"text":"...","speakerId":"<cast id>","backgroundId":"<id from the list>","pose":"<pose id>","onScreen":"WORD or null"}],
   "payoff": "...",
@@ -42,7 +44,7 @@ the promise mismatch that kills watch-through.
 `.trim();
 
   return askJson({
-    system: WRITER_SYSTEM(bible, cast, backgrounds),
+    system: WRITER_SYSTEM(bible, cast, backgrounds, SHAPES[shape]),
     prompt,
     maxTokens: 3000,
     stage: 'script',
@@ -60,7 +62,12 @@ export async function generateScript(idea: Idea): Promise<Script> {
   const bible = state.bible();
   const backgrounds = scenery().map(s => s.id);
 
-  let script = await draft(idea, cast, bible, backgrounds);
+  // Cycle shapes by least-recently-used, so the catalogue covers all five
+  // rather than drifting toward whichever the model finds easiest.
+  const recent = state.published.all().slice(-12).map(p => p.shape).filter(Boolean) as ShapeId[];
+  const shape = nextShape(recent);
+
+  let script = await draft(idea, cast, bible, backgrounds, shape);
 
   for (let round = 0; round < 2; round++) {
     const critique = await askText(
@@ -79,7 +86,7 @@ export async function generateScript(idea: Idea): Promise<Script> {
     }
 
     if (verdict.verdict === 'pass') break;
-    script = await draft(idea, cast, bible, backgrounds, verdict.notes);
+    script = await draft(idea, cast, bible, backgrounds, shape, verdict.notes);
   }
 
   if (script.estimatedSeconds > MAX_DURATION_SEC) {

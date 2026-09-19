@@ -17,7 +17,8 @@
     "publish": "tsx --env-file-if-exists=.env src/cli.ts publish",
     "autopilot": "tsx --env-file-if-exists=.env src/cli.ts run",
     "studio": "remotion studio remotion/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "metrics": "tsx --env-file-if-exists=.env src/cli.ts metrics"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.0",

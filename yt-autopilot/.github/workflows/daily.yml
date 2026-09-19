@@ -10,7 +10,7 @@ on:
     inputs:
       count:
         description: How many videos to make this run
-        default: '3'
+        default: '1'
 
 permissions:
   contents: write
@@ -36,12 +36,22 @@ jobs:
             libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
             libxrandr2 libgbm1 libasound2t64 || true
 
+      # Fresh analytics first — the breaker is only as good as its data.
+      - name: Pull metrics
+        continue-on-error: true
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: npm run metrics
+
       # ---- Autopilot: no human in the loop ----
       - name: Generate and queue
         if: vars.AUTO_APPROVE == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: npm run ideate 12 -- --auto ${{ inputs.count || vars.DAILY_COUNT || '3' }}
+          TTS_API_KEY: ${{ secrets.TTS_API_KEY }}
+        run: npm run ideate 12 -- --auto ${{ inputs.count || vars.DAILY_COUNT || '1' }}
 
       - name: Produce and publish
         if: vars.AUTO_APPROVE == 'true'
@@ -53,6 +63,8 @@ jobs:
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
           DRY_RUN: ${{ vars.DRY_RUN || 'true' }}
+          RETENTION_FLOOR: ${{ vars.RETENTION_FLOOR || '30' }}
+          RETENTION_WINDOW: ${{ vars.RETENTION_WINDOW || '10' }}
         run: npm run autopilot
 
       # ---- Gated: open the issue and stop ----
@@ -79,6 +91,12 @@ jobs:
               owner: context.repo.owner, repo: context.repo.repo,
               title: `Selection gate — ${week}`, body, labels: ['selection-gate'],
             });
+
+      - name: Explain a held run
+        if: failure()
+        run: |
+          echo "::warning::If the run stopped with exit code 2, the retention"
+          echo "::warning::breaker held publishing. See the 'Produce' step log."
 
       - name: Keep the videos
         if: always()
