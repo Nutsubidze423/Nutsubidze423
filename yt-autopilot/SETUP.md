@@ -1,195 +1,265 @@
-# Setup
+# Setup — step by step
 
-Everything here is one-time. After it, the channel runs on a weekly issue you
-tick from your phone.
+Work through these in order. Budget **~60 minutes** and **~$12** ($10 of API
+credit, ~$2 of which gets spent building the asset library).
 
-Budget about **45 minutes** and **~$7** to first video (~$5 in API credit,
-~$2 of that spent building the asset library).
-
----
-
-## What cannot be automated, and why
-
-Four things need a human, permanently. They are not gaps in the code:
-
-| Step | Why it's manual |
-|---|---|
-| Creating accounts, entering a card | Providers require a human and a payment method |
-| The OAuth consent click | Google's flow needs a real browser session — there is a helper script, but you click |
-| The weekly gate | Optional — see **Full autopilot** below |
-| Filling the last bible section | Your sense of humor is the input the pipeline has no way to infer |
-
-Everything else — ideas, scripts, voice, visuals, assembly, thumbnails,
-metadata, upload, scheduling — is unattended.
-
-**On the gate.** Both modes ship. The gate is ~10 minutes a week and is the
-load-bearing part of staying monetizable — a closed issue showing a human
-picked and edited each premise is the clearest evidence that a person directs
-this channel. Autopilot removes it entirely with one repository variable; the
-tradeoff is spelled out under **Full autopilot**.
+Two things that will silently break everything if you skip them are called out
+as **⚠ Critical** below. Don't skip those.
 
 ---
 
-## 1 · Accounts and keys (~20 min)
+## Step 1 · Give the code its own repo
 
-### Google account
-Make a **dedicated** one. Not your personal login — it is the single point of
-failure for the whole operation. Turn on 2FA, ideally a hardware key, and set
-recovery options.
+The code currently sits in a folder inside your profile repo, on a branch.
+It cannot run there.
+
+> **⚠ Critical:** GitHub only runs scheduled workflows from a repository's
+> **default branch**. A `cron:` on any other branch never fires. The whole
+> point of this project is the schedule, so it needs its own repo with this
+> code on `main`.
+
+1. On github.com → **New repository** → name it `yt-autopilot` → **Private** →
+   don't initialise with anything.
+
+2. On your machine:
+
+```bash
+git clone --branch claude/faceless-yt-automation-plan-qwcyxz \
+  https://github.com/Nutsubidze423/Nutsubidze423.git tmp-profile
+
+cp -r tmp-profile/yt-autopilot ./yt-autopilot
+rm -rf tmp-profile
+cd yt-autopilot
+
+git init -b main
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/Nutsubidze423/yt-autopilot.git
+git push -u origin main
+```
+
+---
+
+## Step 2 · Accounts and keys (~20 min)
+
+### 2a · A dedicated Google account
+
+Make a **new** one. Not your personal login — it is the single point of
+failure for the whole operation, and if the channel gets actioned you do not
+want that attached to your real identity. Turn on 2FA and set recovery options.
 
 Create the YouTube channel on it.
 
-### Anthropic — scripts
-1. [console.anthropic.com](https://console.anthropic.com) → API keys → create
-2. Add ~$5 credit. At ~$0.05/video this lasts months.
-3. Keep the key for step 3.
+### 2b · Anthropic — writes the scripts
 
-### OpenAI — voice and the asset library
-1. [platform.openai.com](https://platform.openai.com) → API keys → create
-2. Add ~$5 credit. The library costs ~$2 once; voice is ~$0.02/video after.
-3. One key covers both `TTS_API_KEY` and `IMAGE_API_KEY`.
+1. [console.anthropic.com](https://console.anthropic.com) → **API keys** → create one
+2. Add **$5** of credit. At ~$0.05/video that lasts months.
 
-### YouTube Data API
-1. [console.cloud.google.com](https://console.cloud.google.com) → new project
-2. **APIs & Services → Library** → enable **YouTube Data API v3** and
-   **YouTube Analytics API**
-3. **OAuth consent screen** → External → add your own address as a test user
+### 2c · OpenAI — voice, images, and deduplication
+
+1. [platform.openai.com](https://platform.openai.com) → **API keys** → create one
+2. Add **$5** of credit
+3. The same key goes in both `TTS_API_KEY` and `IMAGE_API_KEY`
+
+### 2d · YouTube API access
+
+Signed in as the **new** Google account:
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → **New project**
+2. **APIs & Services → Library** → enable both:
+   - **YouTube Data API v3** (uploading)
+   - **YouTube Analytics API** (the retention breaker)
+3. **OAuth consent screen** → **External** → add the new account's own address
+   as a **test user**
 4. **Credentials → Create credentials → OAuth client ID → Web application**
 5. Under *Authorised redirect URIs* add exactly: `http://localhost:8412`
-6. Keep the client ID and secret
+6. Copy the **client ID** and **client secret**
 
-Then get the refresh token — this is the one browser step:
+### 2e · The refresh token
 
-```bash
-YOUTUBE_CLIENT_ID=... YOUTUBE_CLIENT_SECRET=... npx tsx scripts/youtube-auth.ts
-```
-
-Open the printed URL, approve, and the token appears in your terminal.
-
----
-
-## 2 · Make it yours (~15 min)
+This is the only step that needs a browser. From inside `yt-autopilot`:
 
 ```bash
 npm install
-cp .env.example .env      # paste the keys in
-npm run doctor            # tells you exactly what is still missing
+YOUTUBE_CLIENT_ID=your-id YOUTUBE_CLIENT_SECRET=your-secret \
+  npx tsx scripts/youtube-auth.ts
 ```
 
-**`content/cast.json`** — three characters ship as a starting point. Rename
-them, rewrite the personalities, change the `look` strings. Do this *before*
-building the library: once assets exist, changing a look means the character
-visibly changes mid-catalogue.
-
-**`content/bible.md`** — fill the last section, the rules specific to your
-sense of humor. This file is injected into every script prompt and the
-pipeline has no taste of its own. It is the highest-leverage 10 minutes here.
-
-**`content/scenery.json`** — ten locations. Add or swap freely.
+Open the printed URL, approve (you'll see an "unverified app" warning — that's
+expected for a personal OAuth client, continue past it), and the refresh token
+prints in your terminal.
 
 ---
 
-## 3 · Build the library (~10 min, ~$2)
+## Step 3 · Make it yours (~15 min)
 
 ```bash
-npm run library --dry     # prices it first
-npm run library           # generates what is missing
-git add assets/library && git commit -m "chore: asset library"
+cp .env.example .env
 ```
 
-Commit the assets. CI then needs no image API at all, and builds are
-deterministic. Re-running only generates what's missing, so adding a character
-or location later costs only the new pieces.
+Fill in `.env` with the five values from Step 2. Then:
+
+```bash
+npm run doctor        # tells you exactly what is still missing
+```
+
+### 3a · The cast — `content/cast.json`
+
+Three characters ship as a starting point. Rename them, rewrite the
+personalities, change the `look` strings to whatever you actually find funny.
+
+> **⚠ Critical:** Do this **before** Step 4. The `look` string is baked into
+> every sprite. Once the library exists and you've published videos, changing
+> a look means the character visibly changes mid-catalogue — your channel
+> splits into a before and after.
+
+### 3b · The bible — `content/bible.md`
+
+Fill the section marked `[ADD YOUR OWN]`. This file is injected into every
+script prompt and the pipeline has no taste of its own — this is the single
+highest-leverage thing you will write. Everything downstream is machinery.
+
+### 3c · Locations — `content/scenery.json` *(optional)*
+
+Ten locations ship. Add or swap freely; each new one costs ~$0.08.
 
 ---
 
-## 4 · Prove it end to end (~5 min)
+## Step 4 · Build the asset library (~10 min, ~$2)
 
 ```bash
-npm run doctor            # everything green?
-npm run build:one         # a seed idea ships in the queue
+npm run library -- --dry     # prices it before spending
+npm run library              # generates the 25 assets
+
+git add assets/library
+git commit -m "Asset library"
+```
+
+Commit the images. CI then never touches the image API, and every build is
+deterministic. Re-running later only generates what's missing, so adding a
+character or location costs just the new pieces.
+
+---
+
+## Step 5 · Prove it works locally (~10 min)
+
+```bash
+npm run doctor               # everything green?
+npm run build:one            # a seed idea ships in the queue
 npm run render
-npm run studio            # watch it before anyone else does
+npm run studio               # watch it
 ```
 
-`DRY_RUN` defaults to `true`, so nothing uploads. Watch the video. If the
-format is wrong, fix it here — automating a bad format only produces bad
-videos faster.
+`DRY_RUN` defaults to `true`, so nothing uploads. **Actually watch the video.**
+If the format is wrong, this is where fixing it is cheap. Automating a bad
+format only produces bad videos faster.
 
 ---
 
-## 5 · Hand it to CI (~5 min)
+## Step 6 · Hand it to CI (~5 min)
 
-Push to a **private** repo, then in **Settings → Secrets and variables →
-Actions**:
+```bash
+git push
+```
 
-**Secrets:**
-`ANTHROPIC_API_KEY`, `TTS_API_KEY`, `IMAGE_API_KEY`,
-`YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`
+### 6a · Workflow permissions
 
-**Variables:** leave `DRY_RUN` unset for now. It defaults to `true`.
+> **⚠ Critical:** New repositories default the Actions token to **read-only**,
+> which makes the "commit state" step fail every run — and the pipeline
+> silently loses its memory of what it has already published, which defeats
+> the deduplication.
 
-Then pick a mode with repository **variables**:
+**Settings → Actions → General → Workflow permissions** →
+select **Read and write permissions** → Save.
 
-- **Autopilot** (no human ever): set `AUTO_APPROVE` = `true`, and
-  `DAILY_COUNT` = `3`.
-- **Gated** (~10 min/week): leave both unset.
+### 6b · Secrets
 
-Trigger `Daily` manually once (**Actions** tab → Run workflow). In autopilot
-it produces three videos and stops short of uploading, because `DRY_RUN` is
-still `true`. Download them from the run's artifacts and watch them.
+**Settings → Secrets and variables → Actions → Secrets → New repository secret:**
 
-When you're happy, add **`DRY_RUN` = `false`**. That is the switch that makes
-it live.
+| Secret | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | from 2b |
+| `TTS_API_KEY` | OpenAI key from 2c |
+| `IMAGE_API_KEY` | the same OpenAI key |
+| `YOUTUBE_CLIENT_ID` | from 2d |
+| `YOUTUBE_CLIENT_SECRET` | from 2d |
+| `YOUTUBE_REFRESH_TOKEN` | from 2e |
 
----
+### 6c · Variables
 
-## From then on
+Same page, **Variables** tab:
 
-In autopilot: nothing. It runs at 06:00 UTC daily, publishes, and commits what
-each run cost to `state/costs.json`. Check in whenever you feel like it.
-
-In gated mode: an issue appears, you tick boxes and close it.
-
----
-
-## Full autopilot
-
-Set repository variable **`AUTO_APPROVE` = `true`**.
-
-`daily.yml` then runs at 06:00 UTC every day with no human in the loop:
-generate 12 premises, queue the top `DAILY_COUNT` (default 3), build, render,
-publish, commit state. Nothing waits for you.
-
-| Variable | Default | Does |
+| Variable | Set to | Why |
 |---|---|---|
-| `AUTO_APPROVE` | unset | `true` removes the human gate entirely |
-| `DAILY_COUNT` | `1` | Videos per day in autopilot mode |
-| `RETENTION_FLOOR` | `30` | Hold publishing below this average view % |
+| `AUTO_APPROVE` | `true` | No human gate — full autopilot |
+| `DAILY_COUNT` | `1` | One video a day |
+
+Leave `DRY_RUN` **unset** for now. It defaults to `true`.
+
+---
+
+## Step 7 · A live rehearsal
+
+**Actions → Daily → Run workflow.**
+
+It will generate a premise, write, voice, render — and stop short of
+uploading, because `DRY_RUN` is still true. Download the MP4 from the run's
+**Artifacts** section and watch it.
+
+Do this **three or four times over a few days.** This is your only cheap
+window to see what the machine actually produces before it starts publishing
+for real.
+
+---
+
+## Step 8 · Go live
+
+Add one more repository variable:
+
+| Variable | Set to |
+|---|---|
+| `DRY_RUN` | `false` |
+
+That's the switch. From now on it runs at **06:00 UTC daily** with no
+involvement from you: pulls analytics, checks the retention breaker, generates
+a premise, screens it against everything ever made, writes, voices, renders,
+publishes, and commits what it spent.
+
+---
+
+## After that
+
+Nothing. That's the point.
+
+If you want to check in, `state/costs.json` has every dollar and
+`state/published.json` has every video. The daily commit keeps the repo active,
+which also stops GitHub disabling the schedule for inactivity.
+
+### The safety rails, and how to adjust them
+
+| Variable | Default | What it does |
+|---|---|---|
+| `DAILY_COUNT` | `1` | Videos per day |
+| `RETENTION_FLOOR` | `30` | Holds publishing below this average view % |
 | `RETENTION_WINDOW` | `10` | Videos the floor is judged over |
-| `DRY_RUN` | `true` | `false` makes uploads real |
+| `MONTHLY_COST_CEILING_USD` | `120` | Halts everything at this spend |
+| `DISABLE_BREAKER` | unset | `true` overrides the retention hold |
 
-Leave `AUTO_APPROVE` unset and the same workflow opens a gate issue instead
-and stops — pick whichever you want, no code change.
+The breaker needs analytics for most of its window before it can fire, and
+YouTube's data lags publication by a day or two. So for roughly the **first
+two weeks it will publish unconditionally** — which is the correct behaviour,
+but it does mean the early videos ship without brakes. Another reason to spend
+real time on Step 7.
 
-**What you are accepting.** Unattended AI-generated uploads are what the
-inauthentic content policy targets, and no code here can fully prevent a
-strike — the policy is about absence of human direction, which is what this
-mode removes. Enforcement runs warning → 90-day suspension → removal, so a
-first offence is a warning, not the end.
+### What you're accepting
 
-Three things in the pipeline push against it: premise dedupe against the whole
-catalogue, five rotating script shapes, and per-video visual treatment. Those
-attack the *repetitive* half of the policy, which matters more than raw count.
-The default cadence is 1/day rather than 3 for the same reason — it is an
-unremarkable human posting rate, and it exhausts the premise space three times
-more slowly.
+Unattended AI-generated uploads are what YouTube's inauthentic content policy
+targets. Three things in the pipeline push against it — premise deduplication
+against the whole catalogue, five rotating script shapes, and per-video visual
+treatment — and the 1/day default is an unremarkable human posting rate. None
+of that is a guarantee. Enforcement runs warning → 90-day suspension →
+removal, so a first strike is a warning rather than the end.
 
-At ~$2.40/month this is a survivable bet. Don't build anything on top of this
-channel that you would miss, and keep the account separate from anything that
-matters.
-
-**Recommended first fortnight, even in autopilot:** leave `DRY_RUN=true` for
-the first few runs and watch the artifacts. Automating a bad format only
-produces bad videos faster, and this is the one window where fixing it is
-cheap.
+At ~$2.40/month this is a survivable bet. Keep the account separate from
+anything that matters, and don't build anything on top of this channel you
+would miss.
