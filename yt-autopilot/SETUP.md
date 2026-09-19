@@ -16,21 +16,17 @@ Four things need a human, permanently. They are not gaps in the code:
 |---|---|
 | Creating accounts, entering a card | Providers require a human and a payment method |
 | The OAuth consent click | Google's flow needs a real browser session — there is a helper script, but you click |
-| The weekly gate | Deliberate. See below. |
+| The weekly gate | Optional — see **Full autopilot** below |
 | Filling the last bible section | Your sense of humor is the input the pipeline has no way to infer |
 
 Everything else — ideas, scripts, voice, visuals, assembly, thumbnails,
 metadata, upload, scheduling — is unattended.
 
-**On the weekly gate.** It is ~10 minutes and it is the load-bearing part of
-staying monetizable. YouTube's inauthentic content policy targets mass-produced
-templated uploads; a closed GitHub issue showing a human picked and edited each
-premise is the clearest evidence you have that a person directs this channel.
-It is also where the quality comes from — idea selection beats production
-quality by a wide margin.
-
-If you want it fully hands-off anyway, see **Full autopilot** at the bottom.
-It's one config change, and the tradeoff is stated there.
+**On the gate.** Both modes ship. The gate is ~10 minutes a week and is the
+load-bearing part of staying monetizable — a closed issue showing a human
+picked and edited each premise is the clearest evidence that a person directs
+this channel. Autopilot removes it entirely with one repository variable; the
+tradeoff is spelled out under **Full autopilot**.
 
 ---
 
@@ -133,37 +129,58 @@ Actions**:
 
 **Variables:** leave `DRY_RUN` unset for now. It defaults to `true`.
 
-Then trigger `Weekly selection gate` manually once (**Actions** tab → Run
-workflow). An issue appears with twenty premises.
+Then pick a mode with repository **variables**:
 
-Tick a few, close it. `Produce` fires, builds, renders, and — still in dry run
-— stops short of uploading. Download the videos from the run's artifacts.
+- **Autopilot** (no human ever): set `AUTO_APPROVE` = `true`, and
+  `DAILY_COUNT` = `3`.
+- **Gated** (~10 min/week): leave both unset.
 
-When you're happy, add repository variable **`DRY_RUN` = `false`**. That is
-the switch that makes it live.
+Trigger `Daily` manually once (**Actions** tab → Run workflow). In autopilot
+it produces three videos and stops short of uploading, because `DRY_RUN` is
+still `true`. Download them from the run's artifacts and watch them.
+
+When you're happy, add **`DRY_RUN` = `false`**. That is the switch that makes
+it live.
 
 ---
 
 ## From then on
 
-Sunday morning an issue appears. Tick five boxes, close it. By Monday the
-videos are published and the state files are committed back with what
-everything cost.
+In autopilot: nothing. It runs at 06:00 UTC daily, publishes, and commits what
+each run cost to `state/costs.json`. Check in whenever you feel like it.
 
-That is the whole ongoing commitment.
+In gated mode: an issue appears, you tick boxes and close it.
 
 ---
 
 ## Full autopilot
 
-If you want zero weekly involvement, add a step to `propose.yml` that ticks
-the top five itself and closes the issue immediately.
+Set repository variable **`AUTO_APPROVE` = `true`**.
 
-The tradeoff, stated once: the closed-issue trail stops being evidence that a
-human directed the channel, because one didn't. On a niche that is already
-AI-generated meme content at volume, that trail is the main thing separating
-you from the pattern the inauthentic content policy exists to catch. Videos
-also stop improving, because nobody is steering.
+`daily.yml` then runs at 06:00 UTC every day with no human in the loop:
+generate 12 premises, queue the top `DAILY_COUNT` (default 3), build, render,
+publish, commit state. Nothing waits for you.
 
-My recommendation is to keep the gate and spend ten minutes a week. But it's
-your channel, and it's a five-line change if you want it.
+| Variable | Default | Does |
+|---|---|---|
+| `AUTO_APPROVE` | unset | `true` removes the human gate entirely |
+| `DAILY_COUNT` | `3` | Videos per day in autopilot mode |
+| `DRY_RUN` | `true` | `false` makes uploads real |
+
+Leave `AUTO_APPROVE` unset and the same workflow opens a gate issue instead
+and stops — pick whichever you want, no code change.
+
+**What you are accepting.** Roughly 90 AI-generated videos a month with no
+human input is the textbook profile for YouTube's inauthentic content policy:
+mass-produced, templated, unattended. There is a real chance of demonetization
+or channel termination, and no code here can prevent it — the policy is about
+the absence of human direction, which is exactly what this mode removes.
+
+At ~$7/month that is a survivable bet. Just don't build anything on top of
+this channel that you would miss, and keep the account separate from anything
+that matters.
+
+**Recommended first fortnight, even in autopilot:** leave `DRY_RUN=true` for
+the first few runs and watch the artifacts. Automating a bad format only
+produces bad videos faster, and this is the one window where fixing it is
+cheap.

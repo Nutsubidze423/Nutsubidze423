@@ -12,10 +12,17 @@ Companion to `docs/faceless-yt-automation-master-plan.md`.
 ## What actually works right now
 
 ```
-ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  →  publish
-  ✅            ✅            ✅        ✅         ✅          ✅          ✅
-         ↑ 10 min/week      └──────── unattended, in CI ────────────┘
+ideate  →  [gate]  →  script  →  voice  →  visuals  →  render  →  publish
+  ✅         ✅         ✅        ✅         ✅          ✅          ✅
+          optional    └────────── unattended, in CI ──────────────┘
 ```
+
+Two modes, switched by the `AUTO_APPROVE` repository variable:
+
+- **Autopilot** — daily, no human, ~3 videos/day, ~$7/month
+- **Gated** — a weekly issue you tick, ~10 min/week
+
+See [SETUP.md](SETUP.md) for the tradeoff.
 
 **Built and typechecking clean:**
 
@@ -32,7 +39,8 @@ ideate  →  [human gate]  →  script  →  voice  →  visuals  →  render  �
 | Packaging | `src/packaging/metadata.ts` | Title selection, learns from `metrics.json` once it has rows |
 | Publish | `src/publish/youtube.ts` | `DRY_RUN=true` by default |
 | Gate parser | `src/gate.ts` | Ticked boxes → queue; human edits win over generated text |
-| Orchestration | `.github/workflows/produce.yml` | Close the issue → build, render, publish, commit |
+| Orchestration | `.github/workflows/daily.yml` | Autopilot (no human) or gated, by repo variable |
+| | `.github/workflows/produce.yml` | Gated mode: close the issue → produce |
 | Cost ledger | `src/cost.ts` | Real token usage, halts at the monthly ceiling |
 | Preflight | `src/doctor.ts` | `npm run doctor` — fails before spending, not during |
 

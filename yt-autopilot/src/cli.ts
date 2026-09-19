@@ -134,9 +134,24 @@ async function main() {
       break;
     }
 
+    /** --auto N queues the top N directly, with no human gate. */
     case 'ideate': {
-      const ideas = await generateIdeas(Number(arg) || 20);
+      const auto = process.argv.includes('--auto');
+      const count = Number(arg) || 20;
+      const ideas = await generateIdeas(count);
       state.ideas.save(ideas);
+
+      if (auto) {
+        const take = Number(process.argv[process.argv.indexOf('--auto') + 1]) || 3;
+        // Nothing has ranked these, so "top N" is generation order. Once
+        // metrics.json has rows, score them first — see src/ideate/score.ts.
+        const picked = ideas.slice(0, take);
+        state.queue.save([...state.queue.all(), ...picked]);
+        console.log(`Auto-queued ${picked.length} of ${ideas.length} ideas (no human gate).`);
+        picked.forEach((i, n) => console.log(`  ${n + 1}. ${i.hook}`));
+        break;
+      }
+
       console.log(`Wrote ${ideas.length} ideas to state/ideas.json\n`);
       ideas.forEach((i, n) => console.log(`${String(n + 1).padStart(2)}. ${i.hook}\n    ${i.premise}\n`));
       console.log('Pick the ones you want and move them into state/queue.json.');
